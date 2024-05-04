@@ -5,10 +5,25 @@ export async function fetchDataFor(
   pathparams: string[] = [],
   queryparams: string[] = []
 ): Promise<any[]> {
-  const data = await fetch(
+  console.log(
     endpoint + "/" + pathparams.join("/") + "?" + queryparams.join("&")
   );
-  const json = await data.json();
-  console.log(json, endpoint + "/" + queryparams.join("/"));
-  return json;
+  try {
+    const data = await fetch(
+      endpoint + "/" + pathparams.join("/") + "?" + queryparams.join("&"),
+      {
+        headers: {
+          Accept: "application/json",
+          "Content-Type": "application/json",
+        },
+      }
+    );
+    console.log(data);
+    const json = await data.json();
+    console.log(json);
+    return json;
+  } catch (e) {
+    console.log(e);
+    return fetchDataFor(endpoint, pathparams, queryparams);
+  }
 }

@@ -10,6 +10,7 @@ export type RootStackParamList = {
   Reader: {
     chapter_number?: number;
     juz_number?: number;
+    page: number;
   };
 };
 

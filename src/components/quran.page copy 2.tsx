@@ -76,42 +76,59 @@ const QuranPages: React.FC<{ data: VerseType[] }> = ({ data }) => {
     );
   };
 
-  const surahs = data.reduce(
+  const lineWords = data.reduce(
     (prev: Record<string, WordType[] | VerseType>, cverse: VerseType) => {
       const [chapter, verse_] = cverse.verse_key.split(":");
-      if (prev[chapter] === undefined) {
-        prev[chapter] = []; // Store the verse object for the first verse of each chapter
+      if (verse_ === "1") {
+        prev[chapter + ":" + verse_] = cverse; // Store the verse object for the first verse of each chapter
       }
       cverse.words.forEach((word: WordType) => {
-        (prev[chapter] as WordType[]).push(word); // Push word to the array for the respective line number
+        if (!prev[word.line_number]) {
+          prev[word.line_number] = []; // Initialize the array if it doesn't exist
+        }
+        (prev[word.line_number] as WordType[]).push(word); // Push word to the array for the respective line number
       });
       return prev;
     },
     {} // Use an empty object as the initial value
   );
 
-  //console.log("lineWords", surahs, data);
+  console.log("lineWords", lineWords, data);
   // const lines = Object.keys(lineWords).map((line: string) => {
   //   return lineWords[line].map((word) => {});
   // });
 
-  const lines = Object.keys(surahs).reduce(
+  const headersDisplayed: string[] = [];
+  const lines = Object.keys(lineWords).reduce(
     (elements: ReactElement[], line: string) => {
-      const words = surahs[line] as WordType[];
+      if (Object.hasOwn(lineWords[line], "id")) {
+        return elements;
+      }
+      const words = lineWords[line] as WordType[];
 
       const [chapter, verse_] = words[0].verse_key.split(":");
-      const position = words[0].position;
       //console.log(words);
+
+      const suranInitialized = (chapter: string) => {
+        if (headersDisplayed.includes(chapter)) return true;
+        headersDisplayed.push(chapter);
+        return false;
+      };
       const lineContent = (
         <View key={line} style={styles.lineParent}>
-          {verse_ === "1" && position === 1 ? (
+          {verse_ === "1" && !suranInitialized(chapter) ? (
             <SurahStart
               chapter={getChapterInfo(parseInt(chapter))}
               key={`${chapter}:${verse_}`}
             />
           ) : null}
           {words.length ? (
-            <Text style={[styles.line, TextStyles.f700U]}>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              allowFontScaling
+              style={[styles.line, TextStyles.f700U]}
+            >
               {words.map((word) => {
                 return word.text_uthmani + " ";
               })}
@@ -136,12 +153,10 @@ const styles = StyleSheet.create({
   },
   line: {
     flex: 1,
-    textAlign: "right",
+    textAlign: "center",
     paddingHorizontal: 25,
     color: Colors.Black01,
     fontFamily: "Uthmani",
-    flexWrap: "wrap",
-    lineHeight: userSelectedFontSize * 2.1,
   },
   lineParent: { marginBottom: 15 },
   headerInfo: {

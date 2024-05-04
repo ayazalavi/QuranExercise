@@ -7,6 +7,10 @@ import { Dimensions } from "react-native";
 import { Text } from "react-native-svg";
 import { IndoPakText } from "types/IndoPakText";
 import { QuranChaptersinPage } from "types/quran.pages";
+import { RubElHizbType } from "types/rub_el_hiz";
+
+export let QuranText: string = "";
+export let Juz: Record<string, RubElHizbType[]> = {};
 
 const maxWordsIneachPage = (totalChapters: number, totalBismillah: number) => {
   const screenWidth = Dimensions.get("window").width;
@@ -25,7 +29,7 @@ const downloadQuranIndopakByJuz = (
   setQuranDownloaded: (p: boolean) => void
 ) => {
   setQuranDownloaded(false);
-  const promises = [...Array(30).keys()].map((ind) =>
+  const promises = [...Array(1).keys()].map((ind) =>
     fetchDataFor(Endpoints.QURAN_INDOPAK, [], ["juz_number=" + (ind + 1)])
   );
 
@@ -37,8 +41,74 @@ const downloadQuranIndopakByJuz = (
         }
       })
     )
+    .then(() => (QuranText = allTextQuran()))
     .finally(() => setQuranDownloaded(true));
 };
+
+const downloaRubElHizbAndDoFormat = (
+  setRubElHizDownloaded: (p: boolean) => void
+): Promise<any> => {
+  setRubElHizDownloaded(false);
+  const promises = [...Array(240).keys()].map((ind) =>
+    fetchDataFor(Endpoints.RUB_EL_HIZB, [`${ind + 1}`])
+  );
+
+  return Promise.allSettled(promises)
+    .then((results) =>
+      Promise.allSettled(
+        results.map(async (result: PromiseSettledResult<any>) => {
+          if (result.status === "fulfilled") {
+            const firstVerse = result.value.verses.shift();
+            firstVerse.verse_details = await fetchDataFor(
+              Endpoints.VERSE_DETAILS,
+              [firstVerse.verse_key],
+              [
+                "words=true&translations=131&word_fields=text_uthmani,text_indopak,code_v1,v1_page,verse_id,verse_key&fields=chapter_id",
+              ]
+            );
+            return firstVerse;
+          }
+        })
+      )
+    )
+    .then((results) =>
+      results.map((result: PromiseSettledResult<any>) =>
+        result.status === "fulfilled" ? result.value : {}
+      )
+    )
+    .finally(() => setRubElHizDownloaded(true));
+};
+
+function generateNumbering(num: number) {
+  let result;
+  // if (num % 4 === 0) {
+  //   // If the number is divisible by 4
+  //   result = num / 4;
+  // } else {
+  // If the number is not divisible by 4
+  const quotient = Math.floor((num - 1) / 4);
+  const remainder = (num - 1) % 4;
+  if (remainder === 0) {
+    result = quotient + 1;
+  } else {
+    result = `${remainder}/4`;
+  }
+  // }
+  return result;
+}
+
+const allTextQuran = () =>
+  Object.values(Quran).reduce((acc: string, verses: IndoPakText[]) => {
+    const verseTexts = verses.map(
+      (verse) =>
+        verse.text_indopak +
+        "    " +
+        "\uF67C" +
+        " " +
+        convertToArabicNumber(verse.verse_key.split(":")[1])
+    );
+    return acc + verseTexts;
+  }, "");
 
 const makePagesOfText = () => {
   let totalChapters = 0,
@@ -152,9 +222,9 @@ function calculateWordsThatFit(
   let finalWords = "";
 
   for (const word of words) {
-    const wordWidth = word.length * fontSize * 0.3; // Approximate width of word
+    const wordWidth = word.length * fontSize * 0.28; // Approximate width of word
     currentLineWidth += wordWidth;
-    if (currentLineWidth / componentWidth >= maxLines) {
+    if (currentLineWidth / componentWidth > maxLines) {
       break;
     }
     finalWords += " " + word;
@@ -170,4 +240,6 @@ export {
   makePagesOfText,
   convertToArabicNumber,
   calculateWordsThatFit,
+  downloaRubElHizbAndDoFormat,
+  generateNumbering,
 };

@@ -14,11 +14,11 @@ import { Quran } from "hooks/useAPI";
 
 function ChaptersListItem(props: ChaptersType) {
   const nav = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const onPress = () => {
-    nav.push("Reader", {});
+  const onPress = (page: number) => {
+    nav.push("Reader", { page });
   };
   return (
-    <Pressable onPress={onPress} style={styles.main}>
+    <Pressable onPress={() => onPress(props.pages[0])} style={styles.main}>
       <View style={styles.mainView}>
         <View style={styles.starView}>
           <Star color={Colors.DarkRed} />

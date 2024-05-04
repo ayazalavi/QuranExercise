@@ -11,7 +11,14 @@ import { ChaptersType } from "types/chapters";
 import Back from "@assets/back.svg";
 import { useNavigation } from "@react-navigation/native";
 
-function NavigationHeader(props: ChaptersType) {
+type NavigationheaderType = {
+  chapter: ChaptersType;
+  page: number;
+  hiz: number;
+  juz: number;
+  surah: number;
+};
+function NavigationHeader(props: NavigationheaderType) {
   const nav = useNavigation<NativeStackNavigationProp<any>>();
   const onPress = () => {
     nav.goBack();
@@ -20,32 +27,18 @@ function NavigationHeader(props: ChaptersType) {
     <Pressable onPress={onPress} style={styles.main}>
       <View style={styles.mainView}>
         <Back color="black" />
-        {/* <View style={styles.centerTextView}>
-          <Text style={styles.space}>
-            <Text style={styles.chapterName}>
-              {`${props.translated_name.name} (${props.name_simple}) `}
-            </Text>
-            <Text style={[styles.chapterName, styles.chapterNameArabic]}>
-              {props.name_arabic}
+        <View style={styles.centerTextView}>
+          <Text style={styles.chapterName}>
+            {`${props.chapter.id}. ${props.chapter.translated_name.name} (${props.chapter.name_simple}) `}
+            <Text style={styles.chapterNameArabic}>
+              {props.chapter.name_arabic}
             </Text>
           </Text>
-          <View
-            style={{
-              flex: 1,
-              flexDirection: "row",
-              justifyContent: "space-between",
-            }}
-          >
-            <Text style={styles.chapeterDetails}>
-              {`${props.revelation_place === "makkah" ? "Makki" : "Madani"}, ${
-                props.verses_count
-              } verses`}
-            </Text>
-            <Text style={styles.chapeterDetails}>
-              pages {props.pages[0]}-{props.pages[1]}
-            </Text>
-          </View>
-        </View> */}
+          <Text style={styles.chapeterDetails}>
+            Page {props.page}, Hizb {props.hiz}, Juz {props.juz}, Surah{" "}
+            {props.surah}
+          </Text>
+        </View>
       </View>
     </Pressable>
   );
@@ -58,6 +51,13 @@ export function Separator() {
 const styles = StyleSheet.create({
   main: {
     width: "100%",
+    shadowColor: "#F4F4F4",
+    shadowOffset: {
+      width: 0,
+      height: 5,
+    },
+    shadowOpacity: 0.7,
+    shadowRadius: 0,
   },
   mainView: {
     width: "100%",
@@ -74,6 +74,7 @@ const styles = StyleSheet.create({
   centerTextView: {
     flex: 1,
     marginLeft: 10,
+    flexDirection: "column",
   },
   buttonText: {
     ...TextStyles.f50012,
@@ -81,15 +82,19 @@ const styles = StyleSheet.create({
     position: "absolute",
   },
   chapterName: {
-    ...TextStyles.f50014,
-    color: Colors.Black01,
+    ...TextStyles.f60014,
+    color: "black",
   },
   chapterNameArabic: {
+    ...TextStyles.f70014,
+    color: Colors.Black01,
     fontFamily: "IndoPak",
   },
   chapeterDetails: {
     ...TextStyles.f50012,
-    color: Colors.Gray2,
+    color: Colors.Black01,
+    textAlign: "left",
+    marginTop: 4,
   },
   space: {
     marginBottom: 0,
